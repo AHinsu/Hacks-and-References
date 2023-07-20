@@ -196,6 +196,18 @@ count missing sample in vcf file per line:
 
     bcftools query -f '[%GT\t]\n' a.bcf |  awk '{miss=0};{for (x=1; x<=NF; x++) if ($x=="./.") {miss+=1}};{print miss}' > nmiss.count
 
+Interleave paired-end fastq files:
+
+    paste <(paste - - - - < reads-1.fastq) \
+          <(paste - - - - < reads-2.fastq) \
+        | tr '\t' '\n' \
+        > reads-int.fastq
+
+Decouple an interleaved fastq file:
+
+    paste - - - - - - - - < reads-int.fastq \
+        | tee >(cut -f 1-4 | tr '\t' '\n' > reads-1.fastq) \
+        | cut -f 5-8 | tr '\t' '\n' > reads-2.fastq
 
 ## sort, uniq, cut, etc.
 
@@ -272,6 +284,21 @@ Search for .bam files anywhere in the current directory recursively:
 Delete all .bam files (Irreversible: use with caution! Confirm list BEFORE deleting):
 
     find . -name "*.bam" | xargs rm
+
+
+Find the largest file in a directory:
+
+    find . -type f -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-
+
+
+Count the number of lines in all files with a specific extension in a directory
+
+    find . -type f -name '*.txt' -exec wc -l {} \; | awk '{total += $1} END {print total}'
+
+
+Find all directories in the current directory that contain files with the extension ".log" and compress them into a tar archive:
+
+    find . -type f -name "*.log" -printf "%h\0" | sort -uz | xargs -0 tar -czvf logs.tar.gz
 
 
 Rename all .txt files to .bak (backup *.txt before doing something else to them, for example):
